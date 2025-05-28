@@ -104,13 +104,13 @@ const textGroup = node.append('text')
   .attr('fill', 'black');
 
 textGroup.append('tspan')
-  .attr('x', 0)
-  .attr('dy', '0em') // dòng 1
+  .attr('dx', '0em')
+  .attr('y', 0) // dòng 1
   .text(d => d.data.name);
 
 textGroup.append('tspan')
-  .attr('x', 0)
-  .attr('dy', '1.5em') // dòng 2, cách dòng
+  .attr('dx', '2em')
+  .attr('y', 0) // dòng 2, cách dòng
   .text(d => (d.data.birth || '') + ' - ' + (d.data.death || ''));
 
 }
