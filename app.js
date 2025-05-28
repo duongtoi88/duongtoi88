@@ -97,8 +97,8 @@ function drawTree(data) {
   // Tên theo chiều dọc
 // Dòng 1: Tên
 node.append('text')
-  .attr('x', -40)
-  .attr('y', 20)
+  .attr('x', 40)
+  .attr('y', -20)
   .attr('text-anchor', 'middle')
  // .style('writing-mode', 'vertical-rl')
   .attr('fill', 'black')
