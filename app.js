@@ -97,20 +97,16 @@ function drawTree(data) {
   // Tên theo chiều dọc
 // Dòng 1: Tên
 node.append('text')
-  .attr('x', -40)
-  .attr('y', -40)
   .attr('text-anchor', 'middle')
-  .attr('transform', 'rotate(90)')
+  .attr('transform', 'translate(-30, 10) rotate(90)')
   .style('font-size', '12px')
   .attr('fill', 'black')
   .text(d => d.data.name);
 
 // Dòng 2: Năm sinh - năm mất
 node.append('text')
-  .attr('x', 40)
-  .attr('y', 40)
   .attr('text-anchor', 'middle')
-  .attr('transform', 'rotate(90)')
+  .attr('transform', 'translate(10, 10) rotate(90)')
   .style('font-size', '12px')
   .attr('fill', 'black')
   .text(d => (d.data.birth || '') + ' - ' + (d.data.death || ''));
