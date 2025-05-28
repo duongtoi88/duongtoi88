@@ -117,23 +117,39 @@ function showTooltip(event, data) {
   const name = `<div><b>${data.name}</b></div>`;
   const years = `<div>${data.birth || ''} - ${data.death || ''}</div>`;
 
-  // Lấy danh sách vợ
+  // Lấy danh sách vợ (ID chồng = người này)
   const wives = window.rawRows.filter(r => {
     const idChong = String(r["ID chồng"] || "").replace('.0', '');
     return idChong === data.id;
   });
+
   const spouses = wives.length
     ? `<div><b>Vợ:</b></div>` + wives.map(w => `<div style="margin-left:10px">${w["Họ và tên"]}</div>`).join('')
     : `<div><b>Vợ:</b> -</div>`;
 
-  // Lấy con
-  const children = (data.children && data.children.length)
-    ? `<div><b>Con:</b></div>` + data.children.map(c => `<div style="margin-left:10px">${c.name}</div>`).join('')
+  // Con trai = có ID cha + ID mẹ + ID KHÔNG chứa 'g'
+  const conTrai = window.rawRows.filter(r => {
+    const id = String(r["ID"] || "").toLowerCase();
+    const idCha = String(r["ID cha"] || "").replace(".0", "");
+    const idMe = String(r["ID mẹ"] || "").replace(".0", "");
+    return idCha === data.id && idMe && !id.includes("g");
+  });
+
+  // Con gái = có ID cha + ID mẹ + ID chứa 'g'
+  const conGai = window.rawRows.filter(r => {
+    const id = String(r["ID"] || "").toLowerCase();
+    const idCha = String(r["ID cha"] || "").replace(".0", "");
+    const idMe = String(r["ID mẹ"] || "").replace(".0", "");
+    return idCha === data.id && idMe && id.includes("g");
+  });
+
+  const children = (conTrai.length || conGai.length)
+    ? `<div><b>Con:</b></div>` +
+      conTrai.map(c => `<div style="margin-left:10px">${c["Họ và tên"]}</div>`).join('') +
+      conGai.map(c => `<div style="margin-left:10px">${c["Họ và tên"]}</div>`).join('')
     : `<div><b>Con:</b> -</div>`;
 
   const info = `<div><b>Chi tiết:</b></div><div style="margin-left: 10px;">${data.info || '-'}</div>`;
-
-  // Ảnh đại diện nếu có
   const image = `<div style="margin-top:10px;"><img src="images/${data.id}.png" alt="${data.name}" style="max-width: 120px; max-height: 120px; border:1px solid #ccc;" onerror="this.style.display='none'" /></div>`;
 
   const tooltip = document.getElementById('tooltip');
@@ -142,6 +158,7 @@ function showTooltip(event, data) {
   tooltip.style.left = (event.pageX + 10) + 'px';
   tooltip.style.top = (event.pageY + 10) + 'px';
   tooltip.style.textAlign = 'left';
+}
 }
 
 // Ẩn tooltip nếu click ra ngoài
