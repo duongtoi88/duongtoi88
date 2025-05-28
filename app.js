@@ -106,7 +106,7 @@ node.append('text')
 // Dòng 2: Năm sinh - năm mất
 node.append('text')
   .attr('text-anchor', 'middle')
-  .attr('transform', 'translate(10, -20) rotate(0)')
+  .attr('transform', 'translate(10, 20) rotate(0)')
   .style('font-size', '12px')
   .attr('fill', 'black')
   .text(d => (d.data.birth || '') + ' - ' + (d.data.death || ''));
