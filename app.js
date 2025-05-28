@@ -95,25 +95,24 @@ function drawTree(data) {
     .attr('ry', 10);
 
   // Tên theo chiều dọc
-// Dòng 1: Tên
-node.append('text')
+const textGroup = node.append('text')
   .attr('x', 0)
-  .attr('y', -50)
+  .attr('y', 0)
   .attr('text-anchor', 'middle')
   .style('writing-mode', 'vertical-rl')
   .style('font-size', '12px')
-  .attr('fill', 'black')
+  .attr('fill', 'black');
+
+textGroup.append('tspan')
+  .attr('x', 0)
+  .attr('dy', '0em') // dòng 1
   .text(d => d.data.name);
 
-// Dòng 2: Năm sinh - năm mất
-node.append('text')
+textGroup.append('tspan')
   .attr('x', 0)
-  .attr('y', 50)
-  .attr('text-anchor', 'middle')
-  .style('writing-mode', 'vertical-rl')
-  .style('font-size', '12px')
-  .attr('fill', 'black')
+  .attr('dy', '1.5em') // dòng 2, cách dòng
   .text(d => (d.data.birth || '') + ' - ' + (d.data.death || ''));
+
 }
 
 // Tooltip hiển thị chi tiết
