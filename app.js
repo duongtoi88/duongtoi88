@@ -100,7 +100,7 @@ function drawTree(data) {
     .attr('y', -20)
     .attr('text-anchor', 'middle')
     .style('writing-mode', 'vertical-rl')
-    .text(d => d.name);
+    .text(d => d.data.name);
 
   // Năm sinh - mất theo chiều dọc
   node.append('text')
@@ -109,7 +109,7 @@ function drawTree(data) {
     .attr('text-anchor', 'middle')
     .style('writing-mode', 'vertical-rl')
     .style('font-size', '12px')
-    .text(d => (d.birth || '') + ' - ' + (d.death || ''));
+    .text(d => (d.data.birth || '') + ' - ' + (d.data.death || ''));
 }
 
 // Tooltip hiển thị chi tiết
