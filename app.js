@@ -36,20 +36,22 @@ function convertToTree(rows) {
 }
 
 
-function handleFile(event) {
-  const file = event.target.files[0];
-  const reader = new FileReader();
-  reader.onload = function (e) {
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data, { type: 'array' });
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(sheet);
-	window.rawRows = json; // << Dòng này rất quan trọng!
-    const treeData = convertToTree(json);
-    drawTree(treeData);
-  };
-  reader.readAsArrayBuffer(file);
-}
+window.onload = () => {
+  fetch('input.xlsx')
+    .then(res => res.arrayBuffer())
+    .then(data => {
+      const workbook = XLSX.read(data, { type: 'array' });
+      const sheet = workbook.Sheets[workbook.SheetNames[0]];
+      const json = XLSX.utils.sheet_to_json(sheet);
+
+      window.rawRows = json;
+      const treeData = convertToTree(json);
+      drawTree(treeData);
+    })
+    .catch(err => {
+      console.error("Không thể đọc file Excel:", err);
+    });
+};
 
 
 function drawTree(data) {
