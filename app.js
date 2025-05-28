@@ -96,6 +96,7 @@ function drawTree(data) {
 
   // Tên theo chiều dọc
 node.append('text')
+  .attr('fill', 'black')
   .attr('x', 0)
   .attr('y', -20)
   .attr('text-anchor', 'middle')
@@ -103,6 +104,7 @@ node.append('text')
   .text(d => d.data.name);
 
 node.append('text')
+  .attr('fill', 'black')
   .attr('x', 0)
   .attr('y', 20)
   .attr('text-anchor', 'middle')
