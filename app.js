@@ -95,21 +95,20 @@ function drawTree(data) {
     .attr('ry', 10);
 
   // Tên theo chiều dọc
-  node.append('text')
-    .attr('x', 0)
-    .attr('y', -20)
-    .attr('text-anchor', 'middle')
-    .style('writing-mode', 'vertical-rl')
-    .text(d => d.data.name);
+node.append('text')
+  .attr('x', 0)
+  .attr('y', -20)
+  .attr('text-anchor', 'middle')
+  .style('writing-mode', 'vertical-rl')
+  .text(d => d.data.name);
 
-  // Năm sinh - mất theo chiều dọc
-  node.append('text')
-    .attr('x', 0)
-    .attr('y', 20)
-    .attr('text-anchor', 'middle')
-    .style('writing-mode', 'vertical-rl')
-    .style('font-size', '12px')
-    .text(d => (d.data.birth || '') + ' - ' + (d.data.death || ''));
+node.append('text')
+  .attr('x', 0)
+  .attr('y', 20)
+  .attr('text-anchor', 'middle')
+  .style('writing-mode', 'vertical-rl')
+  .style('font-size', '12px')
+  .text(d => (d.data.birth || '') + ' - ' + (d.data.death || ''));
 }
 
 // Tooltip hiển thị chi tiết
