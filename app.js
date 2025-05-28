@@ -98,16 +98,17 @@ function drawTree(data) {
 // Dòng 1: Tên
 node.append('text')
   .attr('x', -50)
-  .attr('y', -50)
+  .attr('y', 0)
   .attr('text-anchor', 'middle')
   .style('writing-mode', 'vertical-rl')
+  .style('font-size', '12px')
   .attr('fill', 'black')
   .text(d => d.data.name);
 
 // Dòng 2: Năm sinh - năm mất
 node.append('text')
   .attr('x', 50)
-  .attr('y', 50)
+  .attr('y', 0)
   .attr('text-anchor', 'middle')
   .style('writing-mode', 'vertical-rl')
   .style('font-size', '12px')
