@@ -100,7 +100,7 @@ node.append('text')
   .attr('x', 0)
   .attr('y', -50)
   .attr('text-anchor', 'middle')
- // .style('writing-mode', 'vertical-rl')
+  .style('writing-mode', 'vertical-rl')
   .attr('fill', 'black')
   .text(d => d.data.name);
 
@@ -109,7 +109,7 @@ node.append('text')
   .attr('x', 0)
   .attr('y', 50)
   .attr('text-anchor', 'middle')
-  //.style('writing-mode', 'vertical-rl')
+  .style('writing-mode', 'vertical-rl')
   .style('font-size', '12px')
   .attr('fill', 'black')
   .text(d => (d.data.birth || '') + ' - ' + (d.data.death || ''));
