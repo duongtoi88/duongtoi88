@@ -97,7 +97,7 @@ function drawTree(data) {
   // Tên theo chiều dọc
 // Dòng 1: Tên
 node.append('text')
-  .attr('x', 0)
+  .attr('x', -50)
   .attr('y', -50)
   .attr('text-anchor', 'middle')
   .style('writing-mode', 'vertical-rl')
@@ -106,7 +106,7 @@ node.append('text')
 
 // Dòng 2: Năm sinh - năm mất
 node.append('text')
-  .attr('x', 0)
+  .attr('x', 50)
   .attr('y', 50)
   .attr('text-anchor', 'middle')
   .style('writing-mode', 'vertical-rl')
