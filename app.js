@@ -7,6 +7,8 @@ window.onload = () => {
       const sheet = workbook.Sheets[workbook.SheetNames[0]];
       const json = XLSX.utils.sheet_to_json(sheet);
 
+      console.log("Excel dữ liệu:", json); // kiểm tra dữ liệu
+
       window.rawRows = json; // lưu lại để tra vợ
       const treeData = convertToTree(json);
       drawTree(treeData);
