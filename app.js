@@ -59,6 +59,7 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
   const people = {};
   const validIDs = new Set();
 
+  // Bước 1: Chuẩn hóa dữ liệu
   rows.forEach(row => {
     const id = String(row.ID).replace('.0', '');
     people[id] = {
@@ -76,9 +77,9 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
     };
   });
 
+  // Bước 2: Duyệt theo cha
   function collectDescendants(id) {
     if (!people[id]) return;
-
     if (includeGirls || people[id].dinh === "x") {
       validIDs.add(id);
     }
@@ -86,7 +87,6 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
     rows.forEach(r => {
       const childID = String(r.ID).replace('.0', '');
       const fatherID = r["ID cha"] ? String(r["ID cha"]).replace('.0', '') : null;
-
       if (fatherID === id) {
         if (includeGirls || r["Đinh"] === "x") {
           collectDescendants(childID);
@@ -96,30 +96,47 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
   }
 
   collectDescendants(rootID);
-// ✅ Nếu tick "Cả Nam & Nữ" → thêm vợ của các thành viên nam
-if (includeGirls) {
-  const extraSpouses = rows.filter(r => {
-    const idChong = String(r["ID chồng"] || "").replace('.0', '');
-    return validIDs.has(idChong); // người chồng đã trong cây
-  });
 
-  extraSpouses.forEach(r => {
-    const id = String(r.ID).replace('.0', '');
-    validIDs.add(id);
-  });
-}
+  // Bước 3: Nếu hiển thị cả nữ, thêm vợ
+  if (includeGirls) {
+    rows.forEach(r => {
+      const idChong = String(r["ID chồng"] || "").replace('.0', '');
+      if (validIDs.has(idChong)) {
+        const idVo = String(r.ID).replace('.0', '');
+        validIDs.add(idVo);
+      }
+    });
+  }
 
+  // Bước 4: Lọc người cần hiển thị
   const treePeople = {};
   validIDs.forEach(id => {
     if (people[id]) treePeople[id] = people[id];
   });
 
+  // Bước 5: Gán spouses cho chồng (dinh = x)
   Object.values(treePeople).forEach(p => {
-    if (p.father && treePeople[p.father]) {
-      treePeople[p.father].children.push(p);
+    if (p.dinh === "x") {
+      p.spouses = rows.filter(r =>
+        String(r["ID chồng"] || "").replace('.0', '') === p.id
+      ).map(r => people[String(r.ID).replace('.0', '')]).filter(Boolean);
     }
   });
 
+  // Bước 6: Gán con cho cha, loại vợ khỏi cha mẹ nếu đã là vợ
+  Object.values(treePeople).forEach(p => {
+    if (p.father && treePeople[p.father]) {
+      // Không thêm vào children nếu là vợ của ai đó trong cây
+      const isSpouseOfAnyone = Object.values(treePeople).some(tp =>
+        tp.spouses && tp.spouses.find(sp => sp.id === p.id)
+      );
+      if (!isSpouseOfAnyone) {
+        treePeople[p.father].children.push(p);
+      }
+    }
+  });
+
+  // Bước 7: Sắp xếp con theo năm sinh
   Object.values(treePeople).forEach(p => {
     p.children.sort((a, b) => {
       const aYear = parseInt(a.birth) || 9999;
