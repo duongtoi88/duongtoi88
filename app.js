@@ -59,7 +59,6 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
   const people = {};
   const validIDs = new Set();
 
-  // Bước 1: Chuẩn hóa dữ liệu
   rows.forEach(row => {
     const id = String(row.ID).replace('.0', '');
     people[id] = {
@@ -77,7 +76,6 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
     };
   });
 
-  // Bước 2: Duyệt theo cha
   function collectDescendants(id) {
     if (!people[id]) return;
     if (includeGirls || people[id].dinh === "x") {
@@ -97,46 +95,39 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
 
   collectDescendants(rootID);
 
-  // Bước 3: Nếu hiển thị cả nữ, thêm vợ
   if (includeGirls) {
     rows.forEach(r => {
       const idChong = String(r["ID chồng"] || "").replace('.0', '');
       if (validIDs.has(idChong)) {
-        const idVo = String(r.ID).replace('.0', '');
-        validIDs.add(idVo);
+        validIDs.add(String(r.ID).replace('.0', ''));
       }
     });
   }
 
-  // Bước 4: Lọc người cần hiển thị
   const treePeople = {};
   validIDs.forEach(id => {
     if (people[id]) treePeople[id] = people[id];
   });
 
-  // Bước 5: Gán spouses cho chồng (dinh = x)
   Object.values(treePeople).forEach(p => {
     if (p.dinh === "x") {
-      p.spouses = rows.filter(r =>
-        String(r["ID chồng"] || "").replace('.0', '') === p.id
-      ).map(r => people[String(r.ID).replace('.0', '')]).filter(Boolean);
+      p.spouses = Object.values(people).filter(w =>
+        w.spouse === p.id && validIDs.has(w.id)
+      );
     }
   });
 
-  // Bước 6: Gán con cho cha, loại vợ khỏi cha mẹ nếu đã là vợ
   Object.values(treePeople).forEach(p => {
     if (p.father && treePeople[p.father]) {
-      // Không thêm vào children nếu là vợ của ai đó trong cây
-      const isSpouseOfAnyone = Object.values(treePeople).some(tp =>
+      const isSpouse = Object.values(treePeople).some(tp =>
         tp.spouses && tp.spouses.find(sp => sp.id === p.id)
       );
-      if (!isSpouseOfAnyone) {
+      if (!isSpouse) {
         treePeople[p.father].children.push(p);
       }
     }
   });
 
-  // Bước 7: Sắp xếp con theo năm sinh
   Object.values(treePeople).forEach(p => {
     p.children.sort((a, b) => {
       const aYear = parseInt(a.birth) || 9999;
@@ -151,14 +142,11 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
 // Vẽ cây phả hệ bằng D3.js
 function drawTree(data) {
   const root = d3.hierarchy(data);
-
-  // Thiết lập layout dạng cây
   const nodeWidth = 120;
   const nodeHeight = 200;
   const treeLayout = d3.tree().nodeSize([nodeWidth, nodeHeight]);
   treeLayout(root);
 
-  // Tính bounding box thực tế
   const bounds = root.descendants().reduce(
     (acc, d) => ({
       x0: Math.min(acc.x0, d.x),
@@ -170,54 +158,36 @@ function drawTree(data) {
   );
 
   const dx = bounds.x1 - bounds.x0;
-const dy = bounds.y1 - bounds.y0;
-const marginX = 100;
-const marginY = 100;
+  const dy = bounds.y1 - bounds.y0;
+  const marginX = 100;
+  const screenW = window.innerWidth;
+  const scale = Math.min(1, screenW * 0.95 / (dx + marginX));
+  const totalWidth = dx * scale;
+  const translateX = (screenW - totalWidth) / 2 - bounds.x0 * scale;
+  const translateY = 40 - bounds.y0 * scale;
 
-const screenW = window.innerWidth;
-const screenH = window.innerHeight;
-
-// Scale theo chiều ngang (95% chiều rộng)
-const scaleX = Math.min(1, screenW * 0.95 / (dx + marginX));
-const scaleY = Math.min(1, screenH * 0.95 / (dy + marginY));
-const scale = Math.min(scaleX, scaleY); // Giữ tỷ lệ đều nếu muốn
-
-const totalWidth = dx * scale;
-const totalHeight = dy * scale;
-
-const translateX = (screenW - totalWidth) / 2 - bounds.x0 * scale;
-const translateY = (screenH - totalHeight) / 2 - bounds.y0 * scale;
-
-  // Xoá cây cũ
   d3.select("#tree-container").selectAll("svg").remove();
-
-  // Tạo SVG mới
   const svg = d3.select("#tree-container").append("svg")
     .attr("width", screenW)
-    .attr("height", dy + marginY + 300);
+    .attr("height", dy + 300);
 
   const g = svg.append("g")
-    .attr("transform", `translate(${translateX}, ${translateY}) scale(${scaleX})`);
+    .attr("transform", `translate(${translateX}, ${translateY}) scale(${scale})`);
 
-  // Vẽ đường nối
   g.selectAll(".link")
     .data(root.links())
     .enter()
     .append("path")
-    .attr("class", "link")
     .attr("fill", "none")
     .attr("stroke", "#555")
     .attr("stroke-width", 2)
     .attr("d", d => {
-      const x1 = d.source.x;
-      const y1 = d.source.y;
-      const x2 = d.target.x;
-      const y2 = d.target.y;
+      const x1 = d.source.x, y1 = d.source.y;
+      const x2 = d.target.x, y2 = d.target.y;
       const midY = (y1 + y2) / 2;
       return `M ${x1},${y1} V ${midY} H ${x2} V ${y2}`;
     });
 
-  // Vẽ các node
   const node = g.selectAll(".node")
     .data(root.descendants())
     .enter()
@@ -250,6 +220,43 @@ const translateY = (screenH - totalHeight) / 2 - bounds.y0 * scale;
     .style("font-size", "12px")
     .attr("fill", "black")
     .text(d => (d.data.birth || "") + " - " + (d.data.death || ""));
+
+  // Vẽ node vợ bên cạnh chồng
+  root.descendants().forEach(d => {
+    const data = d.data;
+    const x = d.x;
+    const y = d.y;
+    const offset = 100;
+
+    if (data.spouses && data.spouses.length > 0) {
+      data.spouses.forEach((wife, i) => {
+        const wifeX = x + offset + i * 100;
+
+        const wifeGroup = g.append("g")
+          .attr("class", "node")
+          .attr("transform", `translate(${wifeX},${y})`)
+          .on("click", () => openDetailTab(wife.id))
+          .on("mouseover", (event) => showQuickTooltip(event, wife))
+          .on("mouseout", () => document.getElementById("tooltip").style.display = "none");
+
+        wifeGroup.append("rect")
+          .attr("x", -40)
+          .attr("y", -60)
+          .attr("width", 80)
+          .attr("height", 120)
+          .attr("rx", 10)
+          .attr("ry", 10)
+          .attr("class", "node-vo");
+
+        wifeGroup.append("text")
+          .attr("text-anchor", "middle")
+          .attr("y", 0)
+          .style("font-size", "12px")
+          .attr("fill", "black")
+          .text(wife.name);
+      });
+    }
+  });
 }
 
 // Tooltip ngắn khi hover
