@@ -1,6 +1,6 @@
 // Tự động đọc file Excel khi trang vừa load
 window.onload = () => {
-  fetch('https://duongtoi88.github.io/Pha_he/input.xlsx')
+  fetch('https://duongtoi88.github.io/duongtoi88/input.xlsx')
     .then(res => res.arrayBuffer())
     .then(data => {
       const workbook = XLSX.read(data, { type: 'array' });
