@@ -223,14 +223,14 @@ function drawTree(data) {
 
   node.append("text")
     .attr("text-anchor", "middle")
-    .attr("transform", "translate(0, 0)")
+    .attr("transform", "translate(10, 0)")
     .style("font-size", "12px")
     .attr("fill", "black")
     .text(d => d.data.name);
 
   node.append("text")
     .attr("text-anchor", "middle")
-    .attr("transform", "translate(0, 40)")
+    .attr("transform", "translate(-10, 0)")
     .style("font-size", "11px")
     .attr("fill", "black")
     .text(d => (d.data.birth || "") + " - " + (d.data.death || ""));
