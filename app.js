@@ -239,9 +239,7 @@ function drawTree(data) {
     root.descendants().forEach(husband => {
     if (husband.data.dinh === "x") {
       const wives = root.descendants().filter(n =>
-        n.data.type === "spouse" &&
-        husband.children &&
-        husband.children.map(c => c.data.id).includes(n.data.id)
+        n.data.type === "spouse" && n.data.spouse === husband.data.id
       );
   
       wives.forEach((wifeNode, i) => {
@@ -250,6 +248,7 @@ function drawTree(data) {
       });
     }
   });
+
 
   // Vẽ đường gấp khúc từ mẹ sang con
   const wifeColors = ["#ff6666", "#66ccff", "#cc66ff", "#66ff99", "#ffaa33"];
