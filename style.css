@@ -6,12 +6,19 @@ body {
   border: 1px solid #ccc;
   margin-top: 20px;
 }
+/* Màu sắc node đặc biệt theo Đinh */
 .node rect {
-  fill: #d1ecf1;
+  transition: fill 0.3s ease;
+}
+
+.node rect.dinh-x {
+  fill: #c3e6cb; /* Màu xanh nhạt */
+  stroke: #155724;
+}
+
+.node rect.dinh-thuong {
+  fill: #ffffff; /* Màu trắng */
   stroke: #0c5460;
-  stroke-width: 1.5px;
-  rx: 8;
-  ry: 8;
 }
 .node text {
   writing-mode: vertical-rl;
@@ -19,12 +26,6 @@ body {
   font-size: 12px;
   dominant-baseline: middle;
 }
-.node-vo {
-  fill: #fefacc;
-  stroke: #d4b000;
-  stroke-width: 2;
-}
-
 .link {
   fill: none;
   stroke: #999;
