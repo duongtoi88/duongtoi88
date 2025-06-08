@@ -19,6 +19,12 @@ body {
   font-size: 12px;
   dominant-baseline: middle;
 }
+.node-vo {
+  fill: #fefacc;
+  stroke: #d4b000;
+  stroke-width: 2;
+}
+
 .link {
   fill: none;
   stroke: #999;
