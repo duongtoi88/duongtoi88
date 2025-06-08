@@ -199,9 +199,33 @@ function drawTree(data) {
       const midY = (y1 + y2) / 2;
       return `M ${x1},${y1} V ${midY} H ${x2} V ${y2}`;
     });
+  // Dịch chuyển vợ ngang chồng (thủ công)
+    let spouseIndex = 0;
+    root.descendants().forEach(d => {
+      if (d.data.type === "spouse") {
+        const husband = root.descendants().find(n =>
+          n.children && n.children.includes(d) && n.data.dinh === "x"
+        );
+        if (husband) {
+          d.x = husband.x + 10 + spouseIndex * 100;  // mỗi vợ cách nhau 100
+          d.y = husband.y;
+          spouseIndex++;
+        }
+      }
+    });
+
   // Thêm đường nối từ mẹ sang con (thủ công)
     root.descendants().forEach(d => {
       const data = d.data;
+      if (d.data.type === "spouse") {
+    const husband = root.descendants().find(n =>
+      n.children && n.children.includes(d) && n.data.dinh === "x"
+    );
+    if (husband) {
+      d.x = husband.x + 10;  // Cách chồng 10 đơn vị ngang
+      d.y = husband.y;       // Cùng hàng dọc
+    }
+  }
       const motherID = data.mother;
       if (!motherID) return;
     
