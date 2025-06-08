@@ -59,6 +59,7 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
   const people = {};
   const validIDs = new Set();
 
+  // B1: Chuẩn hóa dữ liệu
   rows.forEach(row => {
     const id = String(row.ID).replace('.0', '');
     people[id] = {
@@ -72,10 +73,12 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
       spouse: row["ID chồng"] ? String(row["ID chồng"]).replace('.0', '') : null,
       doi: row["Đời"] || "",
       dinh: row["Đinh"] || "",
-      children: []
+      children: [],
+      type: "normal"
     };
   });
 
+  // B2: Duyệt theo cha
   function collectDescendants(id) {
     if (!people[id]) return;
     if (includeGirls || people[id].dinh === "x") {
@@ -95,6 +98,7 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
 
   collectDescendants(rootID);
 
+  // B3: Nếu hiển thị cả nữ, thêm vợ vào validIDs
   if (includeGirls) {
     rows.forEach(r => {
       const idChong = String(r["ID chồng"] || "").replace('.0', '');
@@ -109,25 +113,31 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
     if (people[id]) treePeople[id] = people[id];
   });
 
+  // B4: Gán children + chèn vợ vào làm children có type = "spouse"
   Object.values(treePeople).forEach(p => {
+    // Gán con
+    if (p.father && treePeople[p.father]) {
+      treePeople[p.father].children.push(p);
+    }
+
+    // Gán vợ nếu là chồng
     if (p.dinh === "x") {
-      p.spouses = Object.values(people).filter(w =>
+      const spouses = Object.values(people).filter(w =>
         w.spouse === p.id && validIDs.has(w.id)
       );
+
+      spouses.forEach(sp => {
+        const clone = {
+          ...sp,
+          children: [],
+          type: "spouse"
+        };
+        p.children.push(clone); // thêm node vợ vào children
+      });
     }
   });
 
-  Object.values(treePeople).forEach(p => {
-    if (p.father && treePeople[p.father]) {
-      const isSpouse = Object.values(treePeople).some(tp =>
-        tp.spouses && tp.spouses.find(sp => sp.id === p.id)
-      );
-      if (!isSpouse) {
-        treePeople[p.father].children.push(p);
-      }
-    }
-  });
-
+  // B5: Sắp xếp children theo năm sinh
   Object.values(treePeople).forEach(p => {
     p.children.sort((a, b) => {
       const aYear = parseInt(a.birth) || 9999;
@@ -142,7 +152,7 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
 // Vẽ cây phả hệ bằng D3.js
 function drawTree(data) {
   const root = d3.hierarchy(data);
-  const nodeWidth = 120;
+  const nodeWidth = 220;
   const nodeHeight = 200;
   const treeLayout = d3.tree().nodeSize([nodeWidth, nodeHeight]);
   treeLayout(root);
@@ -159,11 +169,9 @@ function drawTree(data) {
 
   const dx = bounds.x1 - bounds.x0;
   const dy = bounds.y1 - bounds.y0;
-  const marginX = 100;
   const screenW = window.innerWidth;
-  const scale = Math.min(1, screenW * 0.95 / (dx + marginX));
-  const totalWidth = dx * scale;
-  const translateX = (screenW - totalWidth) / 2 - bounds.x0 * scale;
+  const scale = Math.min(1, screenW * 0.95 / (dx + 100));
+  const translateX = (screenW - dx * scale) / 2 - bounds.x0 * scale;
   const translateY = 40 - bounds.y0 * scale;
 
   d3.select("#tree-container").selectAll("svg").remove();
@@ -174,8 +182,9 @@ function drawTree(data) {
   const g = svg.append("g")
     .attr("transform", `translate(${translateX}, ${translateY}) scale(${scale})`);
 
+  // Vẽ đường nối, bỏ qua node là vợ (type = "spouse")
   g.selectAll(".link")
-    .data(root.links())
+    .data(root.links().filter(d => d.target.data.type !== "spouse"))
     .enter()
     .append("path")
     .attr("fill", "none")
@@ -188,6 +197,7 @@ function drawTree(data) {
       return `M ${x1},${y1} V ${midY} H ${x2} V ${y2}`;
     });
 
+  // Vẽ node
   const node = g.selectAll(".node")
     .data(root.descendants())
     .enter()
@@ -205,7 +215,10 @@ function drawTree(data) {
     .attr("height", 120)
     .attr("rx", 10)
     .attr("ry", 10)
-    .attr("class", d => d.data.dinh === "x" ? "dinh-x" : "dinh-thuong");
+    .attr("class", d => {
+      if (d.data.type === "spouse") return "node-vo";
+      return d.data.dinh === "x" ? "dinh-x" : "dinh-thuong";
+    });
 
   node.append("text")
     .attr("text-anchor", "middle")
@@ -220,43 +233,6 @@ function drawTree(data) {
     .style("font-size", "12px")
     .attr("fill", "black")
     .text(d => (d.data.birth || "") + " - " + (d.data.death || ""));
-
-  // Vẽ node vợ bên cạnh chồng
-  root.descendants().forEach(d => {
-    const data = d.data;
-    const x = d.x;
-    const y = d.y;
-    const offset = 100;
-
-    if (data.spouses && data.spouses.length > 0) {
-      data.spouses.forEach((wife, i) => {
-        const wifeX = x + offset + i * 100;
-
-        const wifeGroup = g.append("g")
-          .attr("class", "node")
-          .attr("transform", `translate(${wifeX},${y})`)
-          .on("click", () => openDetailTab(wife.id))
-          .on("mouseover", (event) => showQuickTooltip(event, wife))
-          .on("mouseout", () => document.getElementById("tooltip").style.display = "none");
-
-        wifeGroup.append("rect")
-          .attr("x", -40)
-          .attr("y", -60)
-          .attr("width", 80)
-          .attr("height", 120)
-          .attr("rx", 10)
-          .attr("ry", 10)
-          .attr("class", "node-vo");
-
-        wifeGroup.append("text")
-          .attr("text-anchor", "middle")
-          .attr("y", 0)
-          .style("font-size", "12px")
-          .attr("fill", "black")
-          .text(wife.name);
-      });
-    }
-  });
 }
 
 // Tooltip ngắn khi hover
