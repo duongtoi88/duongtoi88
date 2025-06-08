@@ -59,7 +59,6 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
   const people = {};
   const validIDs = new Set();
 
-  // B1: Chuẩn hóa dữ liệu
   rows.forEach(row => {
     const id = String(row.ID).replace('.0', '');
     people[id] = {
@@ -78,7 +77,6 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
     };
   });
 
-  // B2: Duyệt theo cha
   function collectDescendants(id) {
     if (!people[id]) return;
     if (includeGirls || people[id].dinh === "x") {
@@ -98,7 +96,6 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
 
   collectDescendants(rootID);
 
-  // B3: Nếu hiển thị cả nữ, thêm vợ vào validIDs
   if (includeGirls) {
     rows.forEach(r => {
       const idChong = String(r["ID chồng"] || "").replace('.0', '');
@@ -113,40 +110,50 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
     if (people[id]) treePeople[id] = people[id];
   });
 
-  // B4: Gán children + chèn vợ vào làm children có type = "spouse"
+  // Gán spouse
   Object.values(treePeople).forEach(p => {
-    // Gán con
-    if (p.father && treePeople[p.father]) {
-      treePeople[p.father].children.push(p);
-    }
-
-    // Gán vợ nếu là chồng
     if (p.dinh === "x") {
-      const spouses = Object.values(people).filter(w =>
+      p.spouses = Object.values(people).filter(w =>
         w.spouse === p.id && validIDs.has(w.id)
       );
+    }
+  });
 
-      spouses.forEach(sp => {
+  // Gán con (loại vợ ra khỏi children)
+  Object.values(treePeople).forEach(p => {
+    if (p.father && treePeople[p.father]) {
+      const isSpouse = Object.values(treePeople).some(tp =>
+        tp.spouses && tp.spouses.find(sp => sp.id === p.id)
+      );
+      if (!isSpouse) {
+        treePeople[p.father].children.push(p);
+      }
+    }
+  });
+
+  // Thêm node vợ vào children của chồng (clone)
+  Object.values(treePeople).forEach(p => {
+    if (p.dinh === "x" && p.spouses && p.spouses.length > 0) {
+      p.spouses.forEach((sp, i) => {
         const clone = {
           ...sp,
           children: [],
           type: "spouse"
         };
-        p.children.push(clone); // thêm node vợ vào children
+        p.children.unshift(clone); // đưa vợ lên đầu
       });
     }
   });
 
-  // B5: Sắp xếp children theo năm sinh
+  // Sắp xếp con (để con sau vợ)
   Object.values(treePeople).forEach(p => {
     p.children.sort((a, b) => {
-    if (a.type === "spouse" && b.type !== "spouse") return -1;
-    if (a.type !== "spouse" && b.type === "spouse") return 1;
-  
-    const aYear = parseInt(a.birth) || 9999;
-    const bYear = parseInt(b.birth) || 9999;
-    return aYear - bYear;
-  });
+      if (a.type === "spouse") return -1;
+      if (b.type === "spouse") return 1;
+      const aYear = parseInt(a.birth) || 9999;
+      const bYear = parseInt(b.birth) || 9999;
+      return aYear - bYear;
+    });
   });
 
   return treePeople[rootID];
