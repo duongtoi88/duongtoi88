@@ -140,10 +140,13 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
   // B5: Sắp xếp children theo năm sinh
   Object.values(treePeople).forEach(p => {
     p.children.sort((a, b) => {
-      const aYear = parseInt(a.birth) || 9999;
-      const bYear = parseInt(b.birth) || 9999;
-      return aYear - bYear;
-    });
+    if (a.type === "spouse" && b.type !== "spouse") return -1;
+    if (a.type !== "spouse" && b.type === "spouse") return 1;
+  
+    const aYear = parseInt(a.birth) || 9999;
+    const bYear = parseInt(b.birth) || 9999;
+    return aYear - bYear;
+  });
   });
 
   return treePeople[rootID];
@@ -195,6 +198,26 @@ function drawTree(data) {
       const x2 = d.target.x, y2 = d.target.y;
       const midY = (y1 + y2) / 2;
       return `M ${x1},${y1} V ${midY} H ${x2} V ${y2}`;
+    });
+  // Thêm đường nối từ mẹ sang con (thủ công)
+    root.descendants().forEach(d => {
+      const data = d.data;
+      const motherID = data.mother;
+      if (!motherID) return;
+    
+      const motherNode = root.descendants().find(n => n.data.id === motherID);
+      if (!motherNode) return;
+    
+      // Vẽ từ mẹ đến con
+      g.append("path")
+        .attr("fill", "none")
+        .attr("stroke", "#999")
+        .attr("stroke-dasharray", "4 2")
+        .attr("stroke-width", 1.5)
+        .attr("d", `M ${motherNode.x},${motherNode.y + 60} 
+                    C ${motherNode.x},${motherNode.y + 100}, 
+                      ${d.x},${d.y - 60}, 
+                      ${d.x},${d.y - 20}`);
     });
 
   // Vẽ node
