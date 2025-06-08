@@ -236,18 +236,21 @@ function drawTree(data) {
     .text(d => (d.data.birth || "") + " - " + (d.data.death || ""));
 
   // Dịch vợ sang cạnh chồng
-  root.descendants().forEach(husband => {
-    if (husband.data.dinh === "x" && husband.children) {
-      let index = 0;
-      husband.children.forEach(child => {
-        if (child.data.type === "spouse") {
-          child.x = husband.x + 90 + index * 90;
-          child.y = husband.y;
-          index++;
-        }
+    root.descendants().forEach(husband => {
+    if (husband.data.dinh === "x") {
+      const wives = root.descendants().filter(n =>
+        n.data.type === "spouse" &&
+        husband.children &&
+        husband.children.map(c => c.data.id).includes(n.data.id)
+      );
+  
+      wives.forEach((wifeNode, i) => {
+        wifeNode.x = husband.x + 90 + i * 90;
+        wifeNode.y = husband.y;
       });
     }
   });
+
 
   // Vẽ đường gấp khúc từ mẹ sang con
   root.descendants().forEach(d => {
