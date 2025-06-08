@@ -155,7 +155,7 @@ function convertToSubTree(rows, rootID, includeGirls = false) {
 // Vẽ cây phả hệ bằng D3.js
 function drawTree(data) {
   const root = d3.hierarchy(data);
-  const nodeWidth = 220;
+  const nodeWidth = 200;
   const nodeHeight = 200;
   const treeLayout = d3.tree().nodeSize([nodeWidth, nodeHeight]);
   treeLayout(root);
@@ -185,7 +185,6 @@ function drawTree(data) {
   const g = svg.append("g")
     .attr("transform", `translate(${translateX}, ${translateY}) scale(${scale})`);
 
-  // Vẽ đường nối, bỏ qua node là vợ (type = "spouse")
   g.selectAll(".link")
     .data(root.links().filter(d => d.target.data.type !== "spouse"))
     .enter()
@@ -199,52 +198,7 @@ function drawTree(data) {
       const midY = (y1 + y2) / 2;
       return `M ${x1},${y1} V ${midY} H ${x2} V ${y2}`;
     });
-  // Dịch chuyển vợ ngang chồng (thủ công)
-    let spouseIndex = 0;
-    root.descendants().forEach(d => {
-      if (d.data.type === "spouse") {
-        const husband = root.descendants().find(n =>
-          n.children && n.children.includes(d) && n.data.dinh === "x"
-        );
-        if (husband) {
-          d.x = husband.x + 10 + spouseIndex * 100;  // mỗi vợ cách nhau 100
-          d.y = husband.y;
-          spouseIndex++;
-        }
-      }
-    });
 
-  // Thêm đường nối từ mẹ sang con (thủ công)
-    root.descendants().forEach(d => {
-      const data = d.data;
-      if (d.data.type === "spouse") {
-    const husband = root.descendants().find(n =>
-      n.children && n.children.includes(d) && n.data.dinh === "x"
-    );
-    if (husband) {
-      d.x = husband.x + 10;  // Cách chồng 10 đơn vị ngang
-      d.y = husband.y;       // Cùng hàng dọc
-    }
-  }
-      const motherID = data.mother;
-      if (!motherID) return;
-    
-      const motherNode = root.descendants().find(n => n.data.id === motherID);
-      if (!motherNode) return;
-    
-      // Vẽ từ mẹ đến con
-      g.append("path")
-        .attr("fill", "none")
-        .attr("stroke", "#999")
-        .attr("stroke-dasharray", "4 2")
-        .attr("stroke-width", 1.5)
-        .attr("d", `M ${motherNode.x},${motherNode.y + 60} 
-                    C ${motherNode.x},${motherNode.y + 100}, 
-                      ${d.x},${d.y - 60}, 
-                      ${d.x},${d.y - 20}`);
-    });
-
-  // Vẽ node
   const node = g.selectAll(".node")
     .data(root.descendants())
     .enter()
@@ -256,9 +210,9 @@ function drawTree(data) {
     .on("mouseout", () => document.getElementById("tooltip").style.display = "none");
 
   node.append("rect")
-    .attr("x", -40)
+    .attr("x", -30)
     .attr("y", -60)
-    .attr("width", 80)
+    .attr("width", 60)
     .attr("height", 120)
     .attr("rx", 10)
     .attr("ry", 10)
@@ -269,17 +223,51 @@ function drawTree(data) {
 
   node.append("text")
     .attr("text-anchor", "middle")
-    .attr("transform", "translate(10, 0)")
+    .attr("transform", "translate(0, 0)")
     .style("font-size", "12px")
     .attr("fill", "black")
     .text(d => d.data.name);
 
   node.append("text")
     .attr("text-anchor", "middle")
-    .attr("transform", "translate(-10, 0)")
-    .style("font-size", "12px")
+    .attr("transform", "translate(0, 40)")
+    .style("font-size", "11px")
     .attr("fill", "black")
     .text(d => (d.data.birth || "") + " - " + (d.data.death || ""));
+
+  // Dịch vợ sang cạnh chồng
+  root.descendants().forEach(husband => {
+    if (husband.data.dinh === "x" && husband.children) {
+      let index = 0;
+      husband.children.forEach(child => {
+        if (child.data.type === "spouse") {
+          child.x = husband.x + 80 + index * 80;
+          child.y = husband.y;
+          index++;
+        }
+      });
+    }
+  });
+
+  // Vẽ đường gấp khúc từ mẹ sang con
+  root.descendants().forEach(d => {
+    const motherID = d.data.mother;
+    if (!motherID) return;
+
+    const motherNode = root.descendants().find(n => n.data.id === motherID);
+    if (!motherNode) return;
+
+    const x1 = motherNode.x, y1 = motherNode.y + 60;
+    const x2 = d.x, y2 = d.y - 60;
+    const midY = (y1 + y2) / 2;
+
+    g.append("path")
+      .attr("fill", "none")
+      .attr("stroke", "#999")
+      .attr("stroke-dasharray", "4 2")
+      .attr("stroke-width", 1.5)
+      .attr("d", `M ${x1},${y1} V ${midY} H ${x2} V ${y2}`);
+  });
 }
 
 // Tooltip ngắn khi hover
