@@ -207,7 +207,11 @@ function drawTree(data) {
     .attr("transform", d => `translate(${d.x},${d.y})`)
     .on("click", (event, d) => openDetailTab(d.data.id))
     .on("mouseover", (event, d) => showQuickTooltip(event, d.data))
-    .on("mouseout", () => document.getElementById("tooltip").style.display = "none");
+    .on("mouseout", () => document.getElementById("tooltip").style.display = "none")
+  // Cập nhật lại vị trí vợ sau khi gán x/y mới
+      g.selectAll(".node")
+        .filter(d => d.data.type === "spouse")
+        .attr("transform", d => `translate(${d.x},${d.y})`);
 
   node.append("rect")
     .attr("x", -30)
