@@ -212,7 +212,7 @@ function drawTree(data) {
   node.append("rect")
     .attr("x", -30)
     .attr("y", -60)
-    .attr("width", 60)
+    .attr("width", 80)
     .attr("height", 120)
     .attr("rx", 10)
     .attr("ry", 10)
@@ -241,7 +241,7 @@ function drawTree(data) {
       let index = 0;
       husband.children.forEach(child => {
         if (child.data.type === "spouse") {
-          child.x = husband.x + 80 + index * 80;
+          child.x = husband.x + 90 + index * 90;
           child.y = husband.y;
           index++;
         }
