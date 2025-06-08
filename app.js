@@ -251,24 +251,36 @@ function drawTree(data) {
     }
   });
 
-
   // Vẽ đường gấp khúc từ mẹ sang con
+  const wifeColors = ["#ff6666", "#66ccff", "#cc66ff", "#66ff99", "#ffaa33"];
+
   root.descendants().forEach(d => {
     const motherID = d.data.mother;
     if (!motherID) return;
-
+  
     const motherNode = root.descendants().find(n => n.data.id === motherID);
     if (!motherNode) return;
-
+  
+    // Tìm chồng của mẹ
+    const fatherID = d.data.father;
+    const fatherNode = root.descendants().find(n => n.data.id === fatherID);
+    if (!fatherNode || fatherNode.data.dinh !== "x") return;
+  
+    // Xác định thứ tự vợ thứ mấy
+    const wifeIDs = fatherNode.children
+      .filter(c => c.data.type === "spouse")
+      .map(c => c.data.id);
+    const wifeIndex = wifeIDs.indexOf(motherID);
+    const color = wifeColors[wifeIndex % wifeColors.length];
+  
     const x1 = motherNode.x, y1 = motherNode.y + 60;
     const x2 = d.x, y2 = d.y - 60;
     const midY = (y1 + y2) / 2;
-
+  
     g.append("path")
       .attr("fill", "none")
-      .attr("stroke", "#999")
-      .attr("stroke-dasharray", "4 2")
-      .attr("stroke-width", 1.5)
+      .attr("stroke", color)
+      .attr("stroke-width", 2)
       .attr("d", `M ${x1},${y1} V ${midY} H ${x2} V ${y2}`);
   });
 }
