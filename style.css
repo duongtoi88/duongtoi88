@@ -20,6 +20,12 @@ body {
   fill: #ffffff; /* Màu trắng */
   stroke: #0c5460;
 }
+.node-vo {
+  fill: #fefacc;
+  stroke: #d4b000;
+  stroke-width: 2;
+}
+
 .node text {
   writing-mode: vertical-rl;
   text-orientation: mixed;
